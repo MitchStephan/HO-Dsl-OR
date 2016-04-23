@@ -1,0 +1,69 @@
+DECLARATION:
+hodor {var} :)
+
+ASSIGNMENT:
+{var} Hodor {val} :)
+
+CODE BLOCK: the last result in a code block is the result of the code block
+HODOR...
+HODOR!
+
+ADD:
+HoDoR {val}+
+
+SUBTRACT:
+hOdOr {val}+
+
+MUL:
+HODor {val}+
+
+DIV:
+hoDOR {val}+
+
+CONDITIONALS:
+IF:
+HODOR? {BLOCK} {BLOCK} {[ELSE]}
+
+ELSE:
+HODOR/ {BLOCK}
+
+COND:
+Hodors {{BLOCK} {BLOCK}}+
+
+LOGICAL:
+GT:
+HODORhodor {val} {val}
+
+LT:
+hodorHODOR {val} {val}
+
+EQ:
+hodorhodor || HODORHODOR {val} {val}
+
+AND:
+hodor.hodor
+
+OR:
+HODOR.HODOR {val} {val}
+
+NOT:
+steve {val}
+
+WRITE:
+|HODOR|
+
+FUNCTION DEFINITION:
+_HODOR_ {NAME} {PARAMS...} {BLOCK}
+
+FUNCTION CALL:
+_hodor_ {NAME}({PARAMS...})
+
+LIST:
+hodor[] {var}
+
+Note: all iteration will be expressed as tail recursion. Do we actually want to make it tail recursive or just look that way?
+OPTIONALS!!!!!!
+WHILE:
+READ:
+STRUCT:
+ARRAY:
