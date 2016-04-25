@@ -3,9 +3,6 @@ import scala.util.Random
 import scala.math.{ min, max }
 
 object Hodor {
-	// Functions
-	// Vars
-
 	var localScope: Scope = new Scope(None);
 
 	class Scope (parentScope: Option[Scope]) {

@@ -50,7 +50,7 @@ NOT:
 steve {val}
 
 WRITE:
-|HODOR|
+|HODOR| {var} :)
 
 FUNCTION DEFINITION:
 _HODOR_ {NAME} {PARAMS...} {BLOCK}
