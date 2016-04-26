@@ -1,6 +1,7 @@
 import scala.collection.mutable.{ HashMap, Stack }
 import scala.util.Random
 import scala.math.{ min, max }
+import HodorParser._
 
 object Hodor {
 	var localScope: Scope = new Scope(None);
@@ -64,6 +65,6 @@ object Hodor {
 	case class Print() extends HodorLine
 
 	def main(args: Array[String]): Unit = {
-		println("HODOR")
+		HodorParser.parse(parseProgram, "HODOR... hodor hodorHodor :) hodorHodor Hodor \"Hodor Hodor!\" :) |HODOR| hodorHodor :) HODOR!")
 	}
 }
