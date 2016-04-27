@@ -37,7 +37,7 @@ object HodorParser extends RegexParsers {
 		case v => HodorVarDecl(v)
 	}
 
-	def varAssign: Parser[HodorAssign] = (("""([A-Za-z0-9]+)""").r <~ "Hodor") ~ (expr <~ ":)") ^^ {
+	def varAssign: Parser[HodorAssign] = ("""([A-Za-z0-9]+)""").r <~  "Hodor" ~> expr <~ ":)" ^^ {
 		case v ~ e => HodorAssign(v, e)
 	}
 
