@@ -66,6 +66,6 @@ object Hodor {
 
 	def main(args: Array[String]): Unit = {
 		//println(HodorParser.parse(parseProgram, "HODOR... hodor hodorHodor :) hodorHodor Hodor \"Hodor Hodor!\" :) |HODOR| hodorHodor :) HODOR!"))
-	  println(HodorParser.parse(parseProgram, "HODOR... hodor bleh :) HODOR? HODOR... hodor bleh2 :) HODOR! HODOR... bleh Hodor HoDoR 5 5 :) HODOR! HODOR!"))
+	  println(HodorParser.parse(parseProgram, "HODOR... bleh2 Hodor _hodor_ func (two three) :) hodor bleh :) HODOR? HODOR... hodor bleh2 :) HODOR! HODOR... bleh Hodor HoDoR 5 5 :) HODOR! HODOR!"))
 	}
 }
