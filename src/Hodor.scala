@@ -65,11 +65,12 @@ object Hodor {
 	case class Assign() extends HodorLine
 	case class Print() extends HodorLine
 
-  def main(args: Array[String]): Unit = {
-    for (file <- args) {
-      val source = scala.io.Source.fromFile(file)
-      val lines = try source.mkString finally source.close()
-      println(HodorParser.parse(parseProgram, lines))
+    def main(args: Array[String]): Unit = {
+        for (file <- args) {
+            val source = scala.io.Source.fromFile(file)
+            val lines = try source.mkString finally source.close()
+            // println(lines)
+            println(HodorParser.parse(parseProgram, lines))
+        }
     }
-  }
 }

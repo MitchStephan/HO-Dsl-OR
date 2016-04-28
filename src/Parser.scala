@@ -29,6 +29,7 @@ case class HodorNot(expr: HodorExpr) extends HodorExpr
 case class HodorGT(left: HodorExpr, right: HodorExpr) extends HodorExpr
 case class HodorLT(left: HodorExpr, right: HodorExpr) extends HodorExpr
 case class HodorEQ(operands: List[HodorExpr]) extends HodorExpr
+case class HodorString(str: String) extends HodorExpr
 
 abstract class HodorConditional extends HodorStatement
 case class HodorIf(expr: HodorCodeBlock, thn: HodorCodeBlock) extends HodorConditional
@@ -66,8 +67,12 @@ object HodorParser extends RegexParsers {
 	    case v ~ e => HodorAssign(v, e)
     }
 
-    def expr: Parser[HodorExpr] = (and | or | not | gt | lt | eq | bool | add | subr | mult | div | number | varExpr | funcCall) ^^ {
+    def expr: Parser[HodorExpr] = (and | or | not | gt | lt | eq | bool | add | subr | mult | div | number | stringVal | varExpr | funcCall) ^^ {
         case e => e
+    }
+
+    def stringVal: Parser[HodorExpr] = """"([^"]*)"""".r ^^ {
+        case s => HodorString(s)
     }
 
     def number: Parser[HodorExpr] = """[0-9]+""".r ^^ {
@@ -134,8 +139,11 @@ object HodorParser extends RegexParsers {
         case b => b
     }
 
-    def funcDecl: Parser[HodorFuncDecl] = ("_HODOR_" ~> varName) ~ ("(" ~> (varName*)) ~ (")" ~> block) ^^ {
-        case v ~ vN ~ b => HodorFuncDecl(v, vN, b)
+    def funcDecl: Parser[HodorFuncDecl] = ("_HODOR_" ~> varName) ~ (varName*) ~ "..." ~ block ^^ {
+        case v ~ vN ~ "..." ~ b => {
+            println(vN)
+            HodorFuncDecl(v, vN, b)
+        }
     }
 
     def funcCall: Parser[HodorFuncCall] = "_hodor_" ~> varName ~ (varName*) ^^ {
@@ -145,7 +153,6 @@ object HodorParser extends RegexParsers {
     def printState: Parser[HodorPrint] = "|HODOR|" ~> expr <~ ":)" ^^ {
         case e => HodorPrint(e)
     }
-
 
     /*| assign | codeBlock | ifStat | printStat*/
 
