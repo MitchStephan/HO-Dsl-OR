@@ -1,6 +1,7 @@
 import scala.collection.mutable.{ HashMap, Stack }
 import scala.util.Random
 import scala.math.{ min, max }
+import scala.io.Source
 import HodorParser._
 
 object Hodor {
@@ -55,17 +56,20 @@ object Hodor {
 	}
 
 	abstract sealed class HodorVar
-	case class HodorInt(value: Int) extends HodorVar
+    case class HodorInt(value: Int) extends HodorVar
 	case class HodorBoolean(value: Boolean) extends HodorVar
 	case class HodorString(value: String) extends HodorVar
-	
+
 	abstract sealed class HodorLine
 	case class Declare() extends HodorLine
 	case class Assign() extends HodorLine
 	case class Print() extends HodorLine
 
-	def main(args: Array[String]): Unit = {
-		//println(HodorParser.parse(parseProgram, "HODOR... hodor hodorHodor :) hodorHodor Hodor \"Hodor Hodor!\" :) |HODOR| hodorHodor :) HODOR!"))
-	  println(HodorParser.parse(parseProgram, "HODOR... bleh2 Hodor _hodor_ func (two three) :) hodor bleh :) HODOR? HODOR... hodor bleh2 :) HODOR! HODOR... bleh Hodor HoDoR 5 5 :) HODOR! HODOR!"))
-	}
+  def main(args: Array[String]): Unit = {
+    for (file <- args) {
+      val source = scala.io.Source.fromFile(file)
+      val lines = try source.mkString finally source.close()
+      println(HodorParser.parse(parseProgram, lines))
+    }
+  }
 }
