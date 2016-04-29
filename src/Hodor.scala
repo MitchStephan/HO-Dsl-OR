@@ -105,6 +105,7 @@ object Hodor {
 			case e: HodorNot => evaluateNot(e)
 			case e: HodorAnd => evaluateAnd(e)
 			case e: HodorOr => evaluateOr(e)
+			case e: HodorGT => evaluateGT(e)
 			case _ => throw new IllegalArgumentException("YOu done fucked up")
 		}
 	}
@@ -144,6 +145,64 @@ object Hodor {
 		}
 		collect
 	}
+
+	def evaluateGT(gt: HodorGT): HodorBoolean = {
+		var left = evaluateExpression(gt.left)
+		var right = evaluateExpression(gt.right)
+		var test = true
+		var l =0
+		var r =0
+		left match{
+			case c: HodorInt => { test = true; l = c.value }
+			case _ => { test = false }
+		}
+		right match{
+			case c: HodorInt => { test = true; r = c.value }
+			case _ => { test = false }
+		}
+		if(!test){
+			throw new IllegalArgumentException("YOu done fucked up")
+		}
+		HodorBoolean(l > r)
+	}
+
+	def evaluateLT(lt: HodorLT): HodorBoolean = {
+		var left = evaluateExpression(lt.left)
+		var right = evaluateExpression(lt.right)
+		var test = true
+		var l =0
+		var r =0
+		left match{
+			case c: HodorInt => { test = true;  l = c.value}
+			case _ => { test = false }
+		}
+		right match{
+			case c: HodorInt => { test = true; r = c.value}
+			case _ => { test = false }
+		}
+		if(!test){
+			throw new IllegalArgumentException("YOu done fucked up")
+		}
+		HodorBoolean(l < r)
+	}
+
+	/*def evaluateEQ(eq: HodorEQ): HodorBoolean = {
+		var left = evaluateExpression(eq.left)
+		var right = evaluateExpression(eq.right)
+		var test = true
+		left match{
+			case c: HodorVar => { test = true }
+			case _ => { test = false }
+		}
+		right match{
+			case c: HodorVar => { test = true }
+			case _ => { test = false }
+		}
+		if(!test){
+			throw new IllegalArgumentException("YOu done fucked up")
+		}
+		HodorBoolean(left.value == right.value)
+	}*/
 
 	def printHashMap(map: HashMap[_, _]) {
 		for ((k,v) <- map) {
