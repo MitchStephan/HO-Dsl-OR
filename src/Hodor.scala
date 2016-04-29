@@ -186,23 +186,17 @@ object Hodor {
 		HodorBoolean(l < r)
 	}
 
-	/*def evaluateEQ(eq: HodorEQ): HodorBoolean = {
-		var left = evaluateExpression(eq.left)
-		var right = evaluateExpression(eq.right)
-		var test = true
-		left match{
-			case c: HodorVar => { test = true }
-			case _ => { test = false }
+	def evaluateEQ(eq: HodorEQ): HodorBoolean = {
+		var collect = HodorBoolean(true)
+		for (op <- eq.operands){
+			val b = evaluateExpression(op)
+			b match{
+				case c: HodorVar => {collect = HodorBoolean(collect.value && c == evaluateExpression(eq.operands(0)))}
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
 		}
-		right match{
-			case c: HodorVar => { test = true }
-			case _ => { test = false }
-		}
-		if(!test){
-			throw new IllegalArgumentException("YOu done fucked up")
-		}
-		HodorBoolean(left.value == right.value)
-	}*/
+		collect
+	}
 
 	def printHashMap(map: HashMap[_, _]) {
 		for ((k,v) <- map) {
