@@ -156,7 +156,7 @@ object HodorParser extends RegexParsers {
     /*| assign | codeBlock | ifStat | printStat*/
 
     //def statement: HodorVarDecl = """hodor""" ^^ { case v => HodorVarDecl(v) }
-    //def statement = hodorAssign | hodorVarDecl | hodorCodeBlock | hodorIf | hodorPrint
+    //def statement = hodorAssign | exprDecl | hodorCodeBlock | hodorIf | hodorPrint
 
     //def varName: Parser[String] = ("""([A-Za-z0-9]+)""") ^^ {
     //	case v => v

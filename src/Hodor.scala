@@ -24,9 +24,13 @@ object Hodor {
 			}
 		}
 
-		def getVar (name: String) {
+		def getVar (name: String): HodorVar = {
 			if (vars.contains(name)) {
-				vars.get(name)
+				var v = vars.get(name)
+				v match{
+					case Some(c) => c
+					case _ => throw new IllegalArgumentException("var is not defined")
+				}				
 			} else {
 				parent match {
 					case Some(scope) => scope.getVar(name)
@@ -84,20 +88,20 @@ object Hodor {
 	}
 
 	def evaluateVarDeclare(varDecl: HodorVarDecl) {
-		println(varDecl)
+		//println(varDecl)
 		localScope.defineVar(varDecl.name)
-		printHashMap(localScope.vars)
+		//printHashMap(localScope.vars)
 	}
 
 	def evaluateAssign(assign: HodorAssign) {
-		println(assign)
-		val hodorVar = HodorString("temp string") //evaluteExpression(assign.hodorExpr)
+		//println(assign)
+		val hodorVar = evaluateExpression(assign.hodorExpr)
 		localScope.setVar(assign.name, hodorVar)
-		printHashMap(localScope.vars)
+		//printHashMap(localScope.vars)
 	}
 
 	def evaluateExpression(expr: HodorExpr): HodorVar = {
-		print(expr)
+		//print(expr)
 		expr match{
 			case e: HodorStr => HodorString(e.str)
 			case e: HodorNumber => HodorInt(e.n)
@@ -106,12 +110,29 @@ object Hodor {
 			case e: HodorAnd => evaluateAnd(e)
 			case e: HodorOr => evaluateOr(e)
 			case e: HodorGT => evaluateGT(e)
+			case e: HodorVarExpr => localScope.getVar(e.name)
 			case _ => throw new IllegalArgumentException("YOu done fucked up")
 		}
 	}
 
+	def getHodorVar(input: HodorVar){
+		input match{
+			case i: HodorInt => i.value
+			case i: HodorBoolean => i.value
+			case i: HodorString => i.value
+			case i: HodorNone => throw new IllegalArgumentException("YOu done fucked up")
+		}
+	}
+
 	def evaluatePrint(print: HodorPrint) {
-		println(print)
+		//println(print)
+		var input = evaluateExpression(print.expr)
+		input match{
+			case i: HodorInt => println(i.value)
+			case i: HodorBoolean => println(i.value)
+			case i: HodorString => println(i.value)
+			case i: HodorNone => throw new IllegalArgumentException("YOu done fucked up")
+		}
 	}
 
 	def evaluateNot(not: HodorNot): HodorBoolean = {
@@ -209,7 +230,7 @@ object Hodor {
         for (file <- args) {
             val source = scala.io.Source.fromFile(file)
             val lines = try source.mkString finally source.close()
-            // println(lines)
+            println(lines)
             val parseResult: HodorParser.ParseResult[HodorProgram] = HodorParser.parse(parseProgram, lines);
             println(parseResult)
             val hodorProgram: HodorProgram = parseResult.get
