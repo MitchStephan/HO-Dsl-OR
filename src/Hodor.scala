@@ -96,8 +96,53 @@ object Hodor {
 		printHashMap(localScope.vars)
 	}
 
+	def evaluateExpression(expr: HodorExpr): HodorVar = {
+		print(expr)
+		expr match{
+			case e: HodorStr => HodorString(e.str)
+			case e: HodorNumber => HodorInt(e.n)
+			case e: HodorTrue => HodorBoolean(true)
+			case e: HodorNot => evaluateNot(e)
+			case e: HodorAnd => evaluateAnd(e)
+			case e: HodorOr => evaluateOr(e)
+			case _ => throw new IllegalArgumentException("YOu done fucked up")
+		}
+	}
+
 	def evaluatePrint(print: HodorPrint) {
 		println(print)
+	}
+
+	def evaluateNot(not: HodorNot): HodorBoolean = {
+		val b = evaluateExpression(not.expr)
+		b match{
+			case c: HodorBoolean => (HodorBoolean(!c.value))
+			case _ => throw new IllegalArgumentException("YOu done fucked up")
+		}
+	}
+	
+	def evaluateAnd(and: HodorAnd): HodorBoolean = {
+		var collect = HodorBoolean(true)
+		for (op <- and.operands){
+			val b = evaluateExpression(op)
+			b match{
+				case c: HodorBoolean => {collect = HodorBoolean(collect.value && c.value)}
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
+		}
+		collect
+	}
+
+	def evaluateOr(or: HodorOr): HodorBoolean = {
+		var collect = HodorBoolean(false)
+		for (op <- or.operands){
+			val b = evaluateExpression(op)
+			b match{
+				case c: HodorBoolean => {collect = HodorBoolean(collect.value || c.value)}
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
+		}
+		collect
 	}
 
 	def printHashMap(map: HashMap[_, _]) {

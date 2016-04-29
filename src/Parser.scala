@@ -28,7 +28,7 @@ case class HodorNot(expr: HodorExpr) extends HodorExpr
 case class HodorGT(left: HodorExpr, right: HodorExpr) extends HodorExpr
 case class HodorLT(left: HodorExpr, right: HodorExpr) extends HodorExpr
 case class HodorEQ(operands: List[HodorExpr]) extends HodorExpr
-case class HodorString(str: String) extends HodorExpr
+case class HodorStr(str: String) extends HodorExpr
 
 abstract class HodorConditional extends HodorStatement
 case class HodorIf(expr: HodorCodeBlock, thn: HodorCodeBlock) extends HodorConditional
@@ -71,7 +71,7 @@ object HodorParser extends RegexParsers {
     }
 
     def stringVal: Parser[HodorExpr] = """"([^"]*)"""".r ^^ {
-        case s => HodorString(s)
+        case s => HodorStr(s)
     }
 
     def number: Parser[HodorExpr] = """[0-9]+""".r ^^ {
