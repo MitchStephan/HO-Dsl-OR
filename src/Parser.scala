@@ -1,5 +1,5 @@
 import scala.util.parsing.combinator._
-import scala.language.postfixOps
+import _root_.scala.language.postfixOps
 import Hodor._
 
 abstract class TheEssenceOfHodor
@@ -8,10 +8,9 @@ case class HodorStatementSeq(states: List[HodorStatement])
 case class HodorCodeBlock(statementSequence: List[TheEssenceOfHodor]) extends TheEssenceOfHodor
 
 abstract class HodorStatement extends TheEssenceOfHodor
-
 case class HodorFuncDecl(name: String, vars: List[String], code: HodorCodeBlock) extends HodorStatement
 case class HodorVarDecl(name: String) extends HodorStatement
-case class HodorAssign(name: String, hodorVar: HodorExpr) extends HodorStatement
+case class HodorAssign(name: String, hodorExpr: HodorExpr) extends HodorStatement
 case class HodorPrint(expr: HodorExpr) extends HodorStatement
 
 abstract class HodorExpr extends TheEssenceOfHodor
