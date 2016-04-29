@@ -115,8 +115,8 @@ object Hodor {
 		}
 	}
 
-	def getHodorVar(input: HodorVar){
-		input match{
+	def getHodorVar(input: HodorVar) {
+		input match {
 			case i: HodorInt => i.value
 			case i: HodorBoolean => i.value
 			case i: HodorString => i.value
@@ -234,7 +234,7 @@ object Hodor {
             val parseResult: HodorParser.ParseResult[HodorProgram] = HodorParser.parse(parseProgram, lines);
             println(parseResult)
             val hodorProgram: HodorProgram = parseResult.get
-            // println(hodorProgram)
+            println(hodorProgram)
             evaluateProgram(hodorProgram)
         }
     }

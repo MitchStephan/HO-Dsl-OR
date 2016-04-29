@@ -66,7 +66,7 @@ object HodorParser extends RegexParsers {
 	    case v ~ e => HodorAssign(v, e)
     }
 
-    def expr: Parser[HodorExpr] = (and | or | not | gt | lt | eq | bool | add | subr | mult | div | number | stringVal | varExpr | funcCall) ^^ {
+    def expr: Parser[HodorExpr] = (or | and | not | bool | gt | lt | eq | add | subr | mult | div | number | stringVal | varExpr | funcCall) ^^ {
         case e => e
     }
 
@@ -140,7 +140,6 @@ object HodorParser extends RegexParsers {
 
     def funcDecl: Parser[HodorFuncDecl] = ("_HODOR_" ~> varName) ~ (varName*) ~ "..." ~ block ^^ {
         case v ~ vN ~ "..." ~ b => {
-            println(vN)
             HodorFuncDecl(v, vN, b)
         }
     }
