@@ -111,17 +111,72 @@ object Hodor {
 			case e: HodorOr => evaluateOr(e)
 			case e: HodorGT => evaluateGT(e)
 			case e: HodorVarExpr => localScope.getVar(e.name)
+			case e: HodorAdd => evaluateAdd(e)
+			case e: HodorSubtract => evaluateSubtract(e)
+			case e: HodorMultiply => evaluateMultiply(e)
+			case e: HodorDivide => evaluateDivide(e)
 			case _ => throw new IllegalArgumentException("YOu done fucked up")
 		}
 	}
-
-	def getHodorVar(input: HodorVar) {
-		input match {
-			case i: HodorInt => i.value
-			case i: HodorBoolean => i.value
-			case i: HodorString => i.value
-			case i: HodorNone => throw new IllegalArgumentException("YOu done fucked up")
+	
+	def evaluateAdd(input: HodorAdd): HodorInt = {
+		var a = 0
+		for (v <- input.operands){
+			val v2 = evaluateExpression(v)
+			v2 match{
+				case c: HodorInt => { a += c.value }
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
 		}
+		HodorInt(a)
+	}
+
+	def evaluateSubtract(input: HodorSubtract): HodorInt = {
+		//a very lazy solution for a fencepost problem 
+		var aa = evaluateExpression(input.operands(0))
+		var a  = 0 
+		aa match{
+			case c: HodorInt => { a = 2*c.value }
+			case _ => throw new IllegalArgumentException("YOu done fucked up")
+		}
+		for (v <- input.operands){
+			val v2 = evaluateExpression(v)
+			v2 match{
+				case c: HodorInt => { a -= c.value }
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
+		}
+		HodorInt(a)
+	}
+
+	def evaluateMultiply(input: HodorMultiply): HodorInt = {
+		var a = 1
+		for (v <- input.operands){
+			val v2 = evaluateExpression(v)
+			v2 match{
+				case c: HodorInt => { a *= c.value }
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
+		}
+		HodorInt(a)
+	}
+
+	def evaluateDivide(input: HodorDivide): HodorInt = {
+		//a very lazy solution for a fencepost problem 
+		var aa = evaluateExpression(input.operands(0))
+		var a = 0
+		aa match{
+			case c: HodorInt => { a = c.value*c.value }
+			case _ => throw new IllegalArgumentException("YOu done fucked up")
+		}
+		for (v <- input.operands){
+			val v2 = evaluateExpression(v)
+			v2 match{
+				case c: HodorInt => { a /= c.value }
+				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			}
+		}
+		HodorInt(a)
 	}
 
 	def evaluatePrint(print: HodorPrint) {
