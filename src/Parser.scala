@@ -11,7 +11,7 @@ case class HodorFuncDecl(name: String, vars: List[String], code: HodorCodeBlock)
 case class HodorVarDecl(name: String) extends HodorStatement
 case class HodorAssign(name: String, hodorExpr: HodorExpr) extends HodorStatement
 case class HodorPrint(expr: HodorExpr) extends HodorStatement
-case class HodorCodeBlock(statementSequence: List[TheEssenceOfHodor]) extends HodorStatement
+case class HodorCodeBlock(statementSequence: List[HodorStatement]) extends HodorStatement
 
 abstract class HodorExpr extends HodorStatement
 case class HodorFuncCall(name: String, params: List[HodorExpr]) extends HodorExpr
@@ -33,7 +33,7 @@ case class HodorStr(str: String) extends HodorExpr
 abstract class HodorConditional extends HodorStatement
 case class HodorIf(expr: HodorExpr, thn: HodorCodeBlock) extends HodorConditional
 case class HodorIfElse(expr: HodorExpr, thn: HodorCodeBlock, els: HodorCodeBlock) extends HodorConditional
-case class HodorCond() extends HodorStatement
+case class HodorLoop(expr: HodorExpr, thn: HodorCodeBlock) extends HodorConditional
 
 // Need functions
 
@@ -50,7 +50,7 @@ object HodorParser extends RegexParsers {
 
     def statementSeq = statement*
 
-    def statement: Parser[HodorStatement] = (funcDecl | varDecl | varAssign | ifElseState | ifState | printState | block | (expr <~ ":)")) ^^ {
+    def statement: Parser[HodorStatement] = (funcDecl | (expr <~ ":)") | varDecl | varAssign | ifElseState | ifState | whileLoop | printState | block) ^^ {
         case s => s
     }
 
@@ -70,7 +70,7 @@ object HodorParser extends RegexParsers {
         case e => e
     }
 
-    def stringVal: Parser[HodorExpr] = """"([^"]*)"""".r ^^ {
+    def stringVal: Parser[HodorExpr] = "\"" ~> """([^"]*)""".r <~ "\"" ^^ {
         case s => HodorStr(s)
     }
 
@@ -138,7 +138,7 @@ object HodorParser extends RegexParsers {
         case b => b
     }
 
-    def funcDecl: Parser[HodorFuncDecl] = ("_HODOR_" ~> varName) ~ (varName*) ~ "_" ~ block ^^ {
+    def funcDecl: Parser[HodorFuncDecl] = ("_HODOR" ~> varName) ~ (varName*) ~ "_" ~ block ^^ {
         case v ~ vN ~ "_" ~ b => {
             HodorFuncDecl(v, vN, b)
         }
@@ -152,55 +152,9 @@ object HodorParser extends RegexParsers {
         case e => HodorPrint(e)
     }
 
-    /*| assign | codeBlock | ifStat | printStat*/
-
-    //def statement: HodorVarDecl = """hodor""" ^^ { case v => HodorVarDecl(v) }
-    //def statement = hodorAssign | exprDecl | hodorCodeBlock | hodorIf | hodorPrint
-
-    //def varName: Parser[String] = ("""([A-Za-z0-9]+)""") ^^ {
-    //	case v => v
-    //}
-
-    /*def varVal = ("""([A-Za-z0-9]+)""") ^^ {
-     case v => v
-     }
-     
-     def hodorVarDecl: Parser[HodorVarDecl] = "hodor" ~> varName <~ ":)" ^^ { 
-     case v => HodorVarDecl(v)
-     }
-
-     def hodorTrue: Parser[HodorTrue] = "hodorHODORhodor" ^^ { 
-     case _ => HodorTrue() 
-     }
-
-     def hodorAssign: Parser[HodorAssign] = varName <~ "Hodor" ~> varVal ^^ {
-     //case n <~ "Hodor" ~> v => HodorAssign(n, v)
-     case _ => HodorAssign("HOdor" , HodorInt(5))
-     }
-     
-     def hodorCodeBlock: Parser[HodorCodeBlock] = "HODOR..." ~> statementSeq <~ "HODOR!" ^^ { (s) => HodorCodeBlock(s) }
-
-     def hodorIf: Parser[HodorIf] = "HODOR?" ~> hodorCodeBlock ~ hodorCodeBlock ~ hodorCodeBlock ^^ { 
-     case cond ~ block1 ~ block2 => HodorIf(cond, block1, block2) 
-     }*/
-
-    // def varAssign: Parser[HodorAssign] = varName <~ "Hodor" ~> varVal <~ ":)" { }
-
-    // def print: Parser[HodorPrint] = new Regex("|HODOR|\s+" + varRegex)
-
-
-    /*def parse (code: String) = parseAll(program, code)
-
-
-     def program: Parser[List[TheEssenceOfHodor]] = (decl | assignment | codeBlock) ~ program
-
-     def decl: Parser[List[TheEssenceOfHodor]] = "hodor" ~> varName <~ ":)"
-
-     def assignment: Parser[List[TheEssenceOfHodor]] = varName <~ "Hodor" ~> value <~ ":)"
-
-     //def codeBlockParser: Parser[List[TheEssenceOfHodor]] = "HODOR..." ~> codeBlock <~ "HODOR!"
-     //def codeBlock: Parser[List[TheEssenceOfHodor]] =
-     */ 
+    def whileLoop: Parser[HodorLoop] = ("hoodddoooorrrrr" ~> expr) ~ block ^^ {
+        case e ~ b => HodorLoop(e, b)
+    }
 }
 
 

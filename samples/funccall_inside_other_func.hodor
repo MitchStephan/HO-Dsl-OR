@@ -1,0 +1,16 @@
+HODOR...
+	hodor blah :)
+	blah Hodor 0 :)
+
+	_HODOR set1 _
+	HODOR...
+		blah Hodor 1 :)
+	HODOR!
+
+	_HODOR func _
+	HODOR...
+		_hodor_ set1 :)
+	HODOR!
+
+	_hodor_ func :)
+HODOR!

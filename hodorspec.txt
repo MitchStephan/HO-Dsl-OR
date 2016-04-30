@@ -64,6 +64,9 @@ _hodor_ {NAME}({PARAMS...})
 LIST:
 hodor[] {var}
 
+LOOP:
+Hoodddoooorrrrr expr {block}
+
 Note: all iteration will be expressed as tail recursion. Do we actually want to make it tail recursive or just look that way?
 OPTIONALS!!!!!!
 WHILE:
