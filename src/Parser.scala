@@ -3,18 +3,18 @@ import _root_.scala.language.postfixOps
 import Hodor._
 
 abstract class TheEssenceOfHodor
-case class HodorProgram(statementSequence: List[HodorStatement])
+case class HodorProgram(codeBlock: HodorCodeBlock)
 case class HodorStatementSeq(states: List[HodorStatement])
-case class HodorCodeBlock(statementSequence: List[TheEssenceOfHodor]) extends TheEssenceOfHodor
 
 abstract class HodorStatement extends TheEssenceOfHodor
 case class HodorFuncDecl(name: String, vars: List[String], code: HodorCodeBlock) extends HodorStatement
 case class HodorVarDecl(name: String) extends HodorStatement
 case class HodorAssign(name: String, hodorExpr: HodorExpr) extends HodorStatement
 case class HodorPrint(expr: HodorExpr) extends HodorStatement
+case class HodorCodeBlock(statementSequence: List[TheEssenceOfHodor]) extends HodorStatement
 
-abstract class HodorExpr extends TheEssenceOfHodor
-case class HodorFuncCall(name: String, params: List[String]) extends HodorExpr
+abstract class HodorExpr extends HodorStatement
+case class HodorFuncCall(name: String, params: List[HodorExpr]) extends HodorExpr
 case class HodorVarExpr(name: String) extends HodorExpr
 case class HodorNumber(n: Int) extends HodorExpr
 case class HodorAdd(operands: List[HodorExpr]) extends HodorExpr
@@ -27,12 +27,12 @@ case class HodorOr(operands: List[HodorExpr]) extends HodorExpr
 case class HodorNot(expr: HodorExpr) extends HodorExpr
 case class HodorGT(left: HodorExpr, right: HodorExpr) extends HodorExpr
 case class HodorLT(left: HodorExpr, right: HodorExpr) extends HodorExpr
-case class HodorEQ(operands: List[HodorExpr]) extends HodorExpr
+case class HodorEQ(left: HodorExpr, right: HodorExpr) extends HodorExpr
 case class HodorStr(str: String) extends HodorExpr
 
 abstract class HodorConditional extends HodorStatement
-case class HodorIf(expr: HodorCodeBlock, thn: HodorCodeBlock) extends HodorConditional
-case class HodorIfElse(expr: HodorCodeBlock, thn: HodorCodeBlock, els: HodorCodeBlock) extends HodorConditional
+case class HodorIf(expr: HodorExpr, thn: HodorCodeBlock) extends HodorConditional
+case class HodorIfElse(expr: HodorExpr, thn: HodorCodeBlock, els: HodorCodeBlock) extends HodorConditional
 case class HodorCond() extends HodorStatement
 
 // Need functions
@@ -40,8 +40,8 @@ case class HodorCond() extends HodorStatement
 object HodorParser extends RegexParsers {
     override def skipWhitespace = true
 
-    def parseProgram: Parser[HodorProgram] = "HODOR..." ~> statementSeq <~ "HODOR!" ^^ {  // returns code block change later
-	    case v => HodorProgram(v)
+    def parseProgram: Parser[HodorProgram] = block ^^ {  // returns code block change later
+	    case b => HodorProgram(b)
     }
 
     def block: Parser[HodorCodeBlock] = "HODOR..." ~> statementSeq <~ "HODOR!" ^^ {
@@ -50,7 +50,7 @@ object HodorParser extends RegexParsers {
 
     def statementSeq = statement*
 
-    def statement: Parser[HodorStatement] = (funcDecl | varDecl | varAssign | ifElseState | ifState | printState) ^^ {
+    def statement: Parser[HodorStatement] = (funcDecl | varDecl | varAssign | ifElseState | ifState | printState | block | (expr <~ ":)")) ^^ {
         case s => s
     }
 
@@ -122,29 +122,29 @@ object HodorParser extends RegexParsers {
         case left ~ right => HodorLT(left, right)
     }
 
-    def eq: Parser[HodorExpr] = (("(" ~> ("hodorhodor || HODORHODOR" ~> expr) ~ (expr+) <~ ")") | (("hodorhodor || HODORHODOR" ~> expr) ~ (expr+))) ^^ {
-        case left ~ right => HodorEQ(left :: right)
+    def eq: Parser[HodorExpr] = (("(" ~> ("hodor^hodor" ~> expr) ~ (expr <~ ")")) | (("hodor^hodor" ~> expr) ~ expr)) ^^ {
+        case left ~ right => HodorEQ(left, right)
     }
 
-    def ifElseState: Parser[HodorConditional] = "HODOR?" ~> block ~ block ~ elseState ^^ {
-        case b1 ~ b2 ~ els => HodorIfElse(b1, b2, els)
+    def ifElseState: Parser[HodorConditional] = "HODOR?" ~> expr ~ block ~ elseState ^^ {
+        case e ~ b ~ els => HodorIfElse(e, b, els)
     }
 
-    def ifState: Parser[HodorConditional] = "HODOR?" ~> block ~ block ^^ {
-        case b1 ~ b2 => HodorIf(b1, b2)
+    def ifState: Parser[HodorConditional] = "HODOR?" ~> expr ~ block ^^ {
+        case e ~ b => HodorIf(e, b)
     }
 
     def elseState: Parser[HodorCodeBlock] = "HODOR/" ~> block ^^ {
         case b => b
     }
 
-    def funcDecl: Parser[HodorFuncDecl] = ("_HODOR_" ~> varName) ~ (varName*) ~ "..." ~ block ^^ {
-        case v ~ vN ~ "..." ~ b => {
+    def funcDecl: Parser[HodorFuncDecl] = ("_HODOR_" ~> varName) ~ (varName*) ~ "_" ~ block ^^ {
+        case v ~ vN ~ "_" ~ b => {
             HodorFuncDecl(v, vN, b)
         }
     }
 
-    def funcCall: Parser[HodorFuncCall] = "_hodor_" ~> varName ~ (varName*) ^^ {
+    def funcCall: Parser[HodorFuncCall] = "_hodor_" ~> varName ~ (expr*) ^^ {
         case f ~ vL => HodorFuncCall(f, vL)
     }
 

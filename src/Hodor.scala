@@ -5,21 +5,22 @@ import scala.io.Source
 import HodorParser._
 
 object Hodor {
-	var localScope: Scope = new Scope(None)
+	var localScope: Option[Scope] = None
 
 	class Scope (parentScope: Option[Scope]) {
 		var funcs: HashMap[String, Function[Array[HodorVar], HodorVar]] = 
 			new HashMap[String, Function[Array[HodorVar], HodorVar]]()
 		var vars: HashMap[String, HodorVar] = new HashMap[String, HodorVar]
 		var parent: Option[Scope] = parentScope
+		var returnVal: HodorVar = HodorNone()
 
 		def getFunc (name: String) {
 			if (funcs.contains(name)) {
 				funcs.get(name)
 			} else {
 				parent match {
-					case Some(scope) => scope.getFunc(name)
-					case None => throw new IllegalArgumentException("function was not defined")
+					case Some(s) => s.getFunc(name)
+					case _ => throw new IllegalArgumentException("function was not defined")
 				}
 			}
 		}
@@ -34,13 +35,12 @@ object Hodor {
 			} else {
 				parent match {
 					case Some(scope) => scope.getVar(name)
-					case None => throw new IllegalArgumentException("var is not defined")
+					case _ => throw new IllegalArgumentException("var is not defined")
 				}
 			}
 		}
 
 		def defineVar (name: String) {
-			println("inside define var")
 			vars += (name -> HodorNone())
 		}
 
@@ -54,7 +54,7 @@ object Hodor {
 			} else {
 				parent match {
 					case Some(scope) => scope.setVar(name, value)
-					case None => throw new IllegalArgumentException("var is not defined")
+					case _ => throw new IllegalArgumentException("var is not defined")
 				}
 			}
 		}
@@ -71,38 +71,64 @@ object Hodor {
 	case class Assign() extends HodorLine
 	case class Print() extends HodorLine
 
-	def evaluateProgram(program: HodorProgram) {
-		// will want a new scope, but using global for now
-		for (statement <- program.statementSequence) {
-		 statement match {
-		 	case s: HodorFuncDecl => evaluateFunctionDeclare(s)
-		 	case s: HodorVarDecl => evaluateVarDeclare(s)
-		 	case s: HodorAssign => evaluateAssign(s)
-		 	case s: HodorPrint => evaluatePrint(s)
-		 } 
+	def evaluateProgram(program: HodorProgram): Any = {
+		evaluateCodeBlock(program.codeBlock) match {
+			case i: HodorInt => i.value
+			case s: HodorString => s.value
+			case b: HodorBoolean => b.value
+			case n: HodorNone => None
 		}
 	}
 
-	def evaluateFunctionDeclare(funcDecl: HodorFuncDecl) {
+	def evaluateCodeBlock(program: HodorCodeBlock): HodorVar = {
+		localScope = Some(new Scope(localScope))
+		var scope = localScope match {
+			case Some(s) => s
+			case _ => throw new IllegalArgumentException()
+		}
+		for (statement <- program.statementSequence) {
+			scope.returnVal = statement match {
+		 		case s: HodorFuncDecl => evaluateFunctionDeclare(s)
+		 		case s: HodorVarDecl => evaluateVarDeclare(s)
+		 		case s: HodorAssign => evaluateAssign(s)
+		 		case s: HodorPrint => evaluatePrint(s)
+		 		case e: HodorExpr => evaluateExpression(e)
+		 		case b: HodorCodeBlock => evaluateCodeBlock(b)
+		 	}
+		}
+		localScope = scope.parent
+		scope.returnVal
+	}
+
+	def evaluateFunctionDeclare(funcDecl: HodorFuncDecl): HodorNone = {
 		println(funcDecl)
+		HodorNone()
 	}
 
-	def evaluateVarDeclare(varDecl: HodorVarDecl) {
+	def evaluateVarDeclare(varDecl: HodorVarDecl): HodorNone = {
 		//println(varDecl)
-		localScope.defineVar(varDecl.name)
+	 	localScope match {
+			case Some(scope) => scope.defineVar(varDecl.name)
+			case _ => throw new IllegalArgumentException()
+		}
 		//printHashMap(localScope.vars)
+		HodorNone()
 	}
 
-	def evaluateAssign(assign: HodorAssign) {
+	def evaluateAssign(assign: HodorAssign): HodorVar = {
 		//println(assign)
 		val hodorVar = evaluateExpression(assign.hodorExpr)
-		localScope.setVar(assign.name, hodorVar)
+		localScope match {
+			case Some(scope) => scope.setVar(assign.name, hodorVar)
+			case _ => throw new IllegalArgumentException()
+		}
 		//printHashMap(localScope.vars)
+		hodorVar
 	}
 
 	def evaluateExpression(expr: HodorExpr): HodorVar = {
 		//print(expr)
-		expr match{
+		var returnVal = expr match {
 			case e: HodorStr => HodorString(e.str)
 			case e: HodorNumber => HodorInt(e.n)
 			case e: HodorTrue => HodorBoolean(true)
@@ -110,13 +136,19 @@ object Hodor {
 			case e: HodorAnd => evaluateAnd(e)
 			case e: HodorOr => evaluateOr(e)
 			case e: HodorGT => evaluateGT(e)
-			case e: HodorVarExpr => localScope.getVar(e.name)
+			case e: HodorLT => evaluateLT(e)
+			case e: HodorEQ => evaluateEQ(e)
+			case e: HodorVarExpr => localScope match {
+				case Some(s) => s.getVar(e.name)
+				case _ => throw new IllegalArgumentException("We've done fucked up")
+			}
 			case e: HodorAdd => evaluateAdd(e)
 			case e: HodorSubtract => evaluateSubtract(e)
 			case e: HodorMultiply => evaluateMultiply(e)
 			case e: HodorDivide => evaluateDivide(e)
 			case _ => throw new IllegalArgumentException("YOu done fucked up")
 		}
+		returnVal
 	}
 	
 	def evaluateAdd(input: HodorAdd): HodorInt = {
@@ -179,15 +211,16 @@ object Hodor {
 		HodorInt(a)
 	}
 
-	def evaluatePrint(print: HodorPrint) {
+	def evaluatePrint(print: HodorPrint): HodorNone = {
 		//println(print)
 		var input = evaluateExpression(print.expr)
-		input match{
+		input match {
 			case i: HodorInt => println(i.value)
 			case i: HodorBoolean => println(i.value)
 			case i: HodorString => println(i.value)
-			case i: HodorNone => throw new IllegalArgumentException("YOu done fucked up")
+			case i: HodorNone => throw new IllegalArgumentException("Hodor? (expression does not have value)")
 		}
+		HodorNone()
 	}
 
 	def evaluateNot(not: HodorNot): HodorBoolean = {
@@ -225,60 +258,30 @@ object Hodor {
 	def evaluateGT(gt: HodorGT): HodorBoolean = {
 		var left = evaluateExpression(gt.left)
 		var right = evaluateExpression(gt.right)
-		var test = true
-		var l =0
-		var r =0
-		left match{
-			case c: HodorInt => { test = true; l = c.value }
-			case _ => { test = false }
+		(left, right) match{
+			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value > r.value)
+			case _ => throw new IllegalArgumentException("Hodor? (Can only compare Ints)")
 		}
-		right match{
-			case c: HodorInt => { test = true; r = c.value }
-			case _ => { test = false }
-		}
-		if(!test){
-			throw new IllegalArgumentException("YOu done fucked up")
-		}
-		HodorBoolean(l > r)
 	}
 
 	def evaluateLT(lt: HodorLT): HodorBoolean = {
 		var left = evaluateExpression(lt.left)
 		var right = evaluateExpression(lt.right)
-		var test = true
-		var l =0
-		var r =0
-		left match{
-			case c: HodorInt => { test = true;  l = c.value}
-			case _ => { test = false }
+		(left, right) match{
+			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value < r.value)
+			case _ => throw new IllegalArgumentException("Hodor? (Can only compare Ints)")
 		}
-		right match{
-			case c: HodorInt => { test = true; r = c.value}
-			case _ => { test = false }
-		}
-		if(!test){
-			throw new IllegalArgumentException("YOu done fucked up")
-		}
-		HodorBoolean(l < r)
 	}
 
 	def evaluateEQ(eq: HodorEQ): HodorBoolean = {
-		var collect = HodorBoolean(true)
-		for (op <- eq.operands){
-			val b = evaluateExpression(op)
-			b match{
-				case c: HodorVar => {collect = HodorBoolean(collect.value && c == evaluateExpression(eq.operands(0)))}
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
-			}
+		var left = evaluateExpression(eq.left)
+		var right = evaluateExpression(eq.right)
+		(left, right) match{
+			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value == r.value)
+			case (l: HodorBoolean, r: HodorBoolean) => HodorBoolean(l.value == r.value)
+			case (l: HodorString, r: HodorString) => HodorBoolean(l.value == r.value)
+			case _ => throw new IllegalArgumentException("Hodor? (Cannot compare two values of different types)")
 		}
-		collect
-	}
-
-	def printHashMap(map: HashMap[_, _]) {
-		for ((k,v) <- map) {
-			print("("+k+","+v+"), ")
-		}
-		println("")
 	}
 
     def main(args: Array[String]): Unit = {
@@ -290,7 +293,7 @@ object Hodor {
             println(parseResult)
             val hodorProgram: HodorProgram = parseResult.get
             println(hodorProgram)
-            evaluateProgram(hodorProgram)
+            println("return: " + evaluateProgram(hodorProgram))
         }
     }
 }

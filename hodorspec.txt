@@ -38,7 +38,7 @@ LT:
 hodorHODOR {val} {val}
 
 EQ:
-hodorhodor || HODORHODOR {val} {val}
+hodor^hodor {val} {val}
 
 AND:
 hodor.hodor
