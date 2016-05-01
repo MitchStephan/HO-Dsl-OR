@@ -2,13 +2,16 @@ import scala.collection.mutable.{ HashMap, Stack }
 import scala.util.Random
 import scala.math.{ min, max }
 import scala.io.Source
+import scala.util.control.NoStackTrace
 import HodorParser._
+
+class HodorException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause) with NoStackTrace
 
 object Hodor {
 	var localScope: Option[Scope] = None
 
 	class Scope (parentScope: Option[Scope]) {
-		var funcs: HashMap[String, (List[String], HodorCodeBlock)] = 
+		var funcs: HashMap[String, (List[String], HodorCodeBlock)] =
 			new HashMap[String, (List[String], HodorCodeBlock)]()
 		var vars: HashMap[String, HodorVar] = new HashMap[String, HodorVar]
 		var parent: Option[Scope] = parentScope
@@ -17,14 +20,14 @@ object Hodor {
 		def getFunc (name: String) : (List[String], HodorCodeBlock) = {
 			if (funcs.contains(name)) {
 				var v = funcs.get(name)
-				v match{
+				v match {
 					case Some(c) => c
-					case _ => throw new IllegalArgumentException("function is not defined")
-				}	
+					case _ => throw new HodorException("Hodor? (function " + name + " is not defined)")
+				}
 			} else {
 				parent match {
 					case Some(s) => s.getFunc(name)
-					case _ => throw new IllegalArgumentException("function was not defined")
+					case _ => throw new HodorException("Hodor? (function " + name + " is not defined)")
 				}
 			}
 		}
@@ -32,14 +35,14 @@ object Hodor {
 		def getVar (name: String): HodorVar = {
 			if (vars.contains(name)) {
 				var v = vars.get(name)
-				v match{
+				v match {
 					case Some(c) => c
-					case _ => throw new IllegalArgumentException("var is not defined")
-				}				
+					case _ => throw new HodorException("Hodor? (variable " + name + " is not defined)")
+				}
 			} else {
 				parent match {
 					case Some(scope) => scope.getVar(name)
-					case _ => throw new IllegalArgumentException("var is not defined")
+					case _ => throw new HodorException("Hodor? (variable " + name + " is not defined)")
 				}
 			}
 		}
@@ -58,7 +61,7 @@ object Hodor {
 			} else {
 				parent match {
 					case Some(scope) => scope.setVar(name, value)
-					case _ => throw new IllegalArgumentException("var is not defined")
+					case _ => throw new HodorException("Hodor? (variable " + name + " is not defined)")
 				}
 			}
 		}
@@ -88,7 +91,7 @@ object Hodor {
 		localScope = Some(new Scope(localScope))
 		var scope = localScope match {
 			case Some(s) => s
-			case _ => throw new IllegalArgumentException("Hodor? (something wrong with scope)")
+			case _ => throw new HodorException("Hodor? (something wrong with scope)")
 		}
 		scope.returnVal = evaluateStatementSeq(program.statementSequence)
 		localScope = scope.parent
@@ -98,7 +101,7 @@ object Hodor {
 	def evaluateFunctionDeclare(funcDecl: HodorFuncDecl): HodorNone = {
 	 	localScope match {
 			case Some(scope) => scope.defineFunc(funcDecl.name, funcDecl.vars, funcDecl.code)
-			case _ => throw new IllegalArgumentException("Hodor? (something wrong with scope)")
+			case _ => throw new HodorException("Hodor? (something wrong with scope)")
 		}
 		HodorNone()
 	}
@@ -107,11 +110,15 @@ object Hodor {
 		localScope = Some(new Scope(localScope))
 		var scope = localScope match {
 			case Some(s) => s
-			case _ => throw new IllegalArgumentException("Hodor? (something wrong with scope)")
+			case _ => throw new HodorException("Hodor? (something wrong with scope)")
 		}
 		var (params, block) = scope.getFunc(funcCall.name)
 		if (params.size != funcCall.params.size) {
-			throw new IllegalArgumentException("Hodor? (number of params does not match defintion)")
+			throw new HodorException("Hodor? (number of parameters does not match defintion of function " +
+                                         funcCall.name + ". Number of parameters expected: " +
+                                         params.size +
+                                         "; number given: " +
+                                         funcCall.params.size + ")")
 		}
 		for (i <- 0 until params.size) {
 			scope.defineVar(params(i))
@@ -141,7 +148,7 @@ object Hodor {
 	def evaluateVarDeclare(varDecl: HodorVarDecl): HodorNone = {
 	 	localScope match {
 			case Some(scope) => scope.defineVar(varDecl.name)
-			case _ => throw new IllegalArgumentException()
+			case _ => throw new HodorException("Hodor? (something wrong with scope)")
 		}
 		HodorNone()
 	}
@@ -150,7 +157,7 @@ object Hodor {
 		val hodorVar = evaluateExpression(assign.hodorExpr)
 		localScope match {
 			case Some(scope) => scope.setVar(assign.name, hodorVar)
-			case _ => throw new IllegalArgumentException()
+			case _ => throw new HodorException("Hodor? (something wrong with scope)")
 		}
 		//printHashMap(localScope.vars)
 		hodorVar
@@ -170,14 +177,14 @@ object Hodor {
 			case e: HodorEQ => evaluateEQ(e)
 			case e: HodorVarExpr => localScope match {
 				case Some(s) => s.getVar(e.name)
-				case _ => throw new IllegalArgumentException("We've done fucked up")
+				case _ => throw new HodorException("Hodor? (" + e.name + "not found in scope)")
 			}
 			case e: HodorAdd => evaluateAdd(e)
 			case e: HodorSubtract => evaluateSubtract(e)
 			case e: HodorMultiply => evaluateMultiply(e)
 			case e: HodorDivide => evaluateDivide(e)
 			case e: HodorFuncCall => evaluateFunctionCall(e)
-			case _ => throw new IllegalArgumentException("YOu done fucked up")
+			case _ => throw new HodorException("Hodor? (Something went wrong)")
 		}
 	}
 
@@ -204,9 +211,9 @@ object Hodor {
 	}
 
 	def isExpressionTrue(expr: HodorExpr): Boolean = {
-		evaluateExpression(expr) match{
-			case e: HodorBoolean => e.value
-			case _ => throw new IllegalArgumentException("Hodor? (expr must evaluate to Boolean)")
+		evaluateExpression(expr) match {
+			case b: HodorBoolean => b.value
+			case _ => throw new HodorException("Hodor? (expression must evaluate to HodorBoolean())")
 		}
 	}
 
@@ -216,32 +223,32 @@ object Hodor {
 		}
 		HodorNone()
 	}
-	
+
 	def evaluateAdd(input: HodorAdd): HodorInt = {
 		var a = 0
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
-			v2 match{
+			v2 match {
 				case c: HodorInt => { a += c.value }
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
+				case _ => throw new HodorException("Hodor? (In evaluating HoDoR, operands must be of type HodorInt)")
 			}
 		}
 		HodorInt(a)
 	}
 
 	def evaluateSubtract(input: HodorSubtract): HodorInt = {
-		//a very lazy solution for a fencepost problem 
+		//a very lazy solution for a fencepost problem
 		var aa = evaluateExpression(input.operands(0))
-		var a  = 0 
-		aa match{
+		var a  = 0
+		aa match {
 			case c: HodorInt => { a = 2*c.value }
-			case _ => throw new IllegalArgumentException("YOu done fucked up")
+			case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
 		}
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
-			v2 match{
+			v2 match {
 				case c: HodorInt => { a -= c.value }
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
+				case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
 			}
 		}
 		HodorInt(a)
@@ -251,27 +258,27 @@ object Hodor {
 		var a = 1
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
-			v2 match{
+			v2 match {
 				case c: HodorInt => { a *= c.value }
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
+				case _ => throw new HodorException("Hodor? (In evaluating HODor, operands must be of type HodorInt)")
 			}
 		}
 		HodorInt(a)
 	}
 
 	def evaluateDivide(input: HodorDivide): HodorInt = {
-		//a very lazy solution for a fencepost problem 
+		//a very lazy solution for a fencepost problem
 		var aa = evaluateExpression(input.operands(0))
 		var a = 0
-		aa match{
+		aa match {
 			case c: HodorInt => { a = c.value*c.value }
-			case _ => throw new IllegalArgumentException("YOu done fucked up")
+			case _ => throw new HodorException("Hodor? (In evaluating hoDOR, operands must be of type HodorInt)")
 		}
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
-			v2 match{
+			v2 match {
 				case c: HodorInt => { a /= c.value }
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
+				case _ => throw new HodorException("Hodor? (In evaluating hoDOR, operands must be of type HodorInt)")
 			}
 		}
 		HodorInt(a)
@@ -284,26 +291,26 @@ object Hodor {
 			case i: HodorInt => println(i.value)
 			case i: HodorBoolean => println(i.value)
 			case i: HodorString => println(i.value)
-			case i: HodorNone => throw new IllegalArgumentException("Hodor? (expression does not have value)")
+			case i: HodorNone => throw new HodorException("Hodor? (Cannat print an uninitialized variable)")
 		}
 		HodorNone()
 	}
 
 	def evaluateNot(not: HodorNot): HodorBoolean = {
 		val b = evaluateExpression(not.expr)
-		b match{
+		b match {
 			case c: HodorBoolean => (HodorBoolean(!c.value))
-			case _ => throw new IllegalArgumentException("YOu done fucked up")
+			case _ => throw new HodorException("Hodor? (In evaluating steve, perand must be of type HodorBoolean)")
 		}
 	}
-	
+
 	def evaluateAnd(and: HodorAnd): HodorBoolean = {
 		var collect = HodorBoolean(true)
 		for (op <- and.operands){
 			val b = evaluateExpression(op)
-			b match{
+			b match {
 				case c: HodorBoolean => { collect = HodorBoolean(collect.value && c.value) }
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			    case _ => throw new HodorException("Hodor? (In evaluating hodor.hodor, operands must be of type HodorBoolean)")
 			}
 		}
 		collect
@@ -313,9 +320,9 @@ object Hodor {
 		var collect = HodorBoolean(false)
 		for (op <- or.operands){
 			val b = evaluateExpression(op)
-			b match{
+			b match {
 				case c: HodorBoolean => { collect = HodorBoolean(collect.value || c.value) }
-				case _ => throw new IllegalArgumentException("YOu done fucked up")
+			    case _ => throw new HodorException("Hodor? (In evaluating HODOR.HODOR, operands must be of type HodorBoolean)")
 			}
 		}
 		collect
@@ -324,29 +331,29 @@ object Hodor {
 	def evaluateGT(gt: HodorGT): HodorBoolean = {
 		var left = evaluateExpression(gt.left)
 		var right = evaluateExpression(gt.right)
-		(left, right) match{
+		(left, right) match {
 			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value > r.value)
-			case _ => throw new IllegalArgumentException("Hodor? (Can only compare Ints)")
+			case _ => throw new HodorException("Hodor? (In evaluating HODORhodor, can only compare expressions of type HodorInt)")
 		}
 	}
 
 	def evaluateLT(lt: HodorLT): HodorBoolean = {
 		var left = evaluateExpression(lt.left)
 		var right = evaluateExpression(lt.right)
-		(left, right) match{
+		(left, right) match {
 			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value < r.value)
-			case _ => throw new IllegalArgumentException("Hodor? (Can only compare Ints)")
+			case _ => throw new HodorException("Hodor? (In evaluating hodorHODOR, can only compare expressions of type HodorInt)")
 		}
 	}
 
 	def evaluateEQ(eq: HodorEQ): HodorBoolean = {
 		var left = evaluateExpression(eq.left)
 		var right = evaluateExpression(eq.right)
-		(left, right) match{
+		(left, right) match {
 			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value == r.value)
 			case (l: HodorBoolean, r: HodorBoolean) => HodorBoolean(l.value == r.value)
 			case (l: HodorString, r: HodorString) => HodorBoolean(l.value == r.value)
-			case _ => throw new IllegalArgumentException("Hodor? (Cannot compare two values of different types)")
+			case (_, _) => throw new HodorException("Hodor? (In evaluating hodor^hodor, operands must be of the same type, given)")
 		}
 	}
 
