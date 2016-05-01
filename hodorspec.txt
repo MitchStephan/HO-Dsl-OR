@@ -56,10 +56,10 @@ WRITE:
 |HODOR| {var} :)
 
 FUNCTION DEFINITION:
-_HODOR_ {NAME} {PARAMS...} {BLOCK}
+_HODOR {NAME} {PARAMS...} _ {BLOCK}
 
 FUNCTION CALL:
-_hodor_ {NAME}({PARAMS...})
+_hodor_ {NAME} {PARAMS...}
 
 LIST:
 hodor[] {var}
