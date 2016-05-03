@@ -66,9 +66,11 @@ object HodorParser extends RegexParsers {
 	    case v ~ e => HodorAssign(v, e)
     }
 
-    def expr: Parser[HodorExpr] = (or | and | not | bool | gt | lt | eq | add | subr | mult | div | number | stringVal | varExpr | funcCall) ^^ {
+    def expr: Parser[HodorExpr] = ( funcCall | or | and | not | bool | gt | lt | eq | add | subr | mult | div | number | stringVal | varExpr) ^^ {
         case e => e
     }
+
+    def comment = "***HODOR" ~ """([^"]*)""".r ~ "HODOR***"
 
     def stringVal: Parser[HodorExpr] = "\"" ~> """([^"]*)""".r <~ "\"" ^^ {
         case s => HodorStr(s)
@@ -144,7 +146,7 @@ object HodorParser extends RegexParsers {
         }
     }
 
-    def funcCall: Parser[HodorFuncCall] = "_hodor_" ~> varName ~ (expr*) ^^ {
+    def funcCall: Parser[HodorFuncCall] = ("_hodor" ~> varName) ~ (expr*) <~ "_" ^^ {
         case f ~ vL => HodorFuncCall(f, vL)
     }
 

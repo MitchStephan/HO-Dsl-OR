@@ -9,8 +9,8 @@ HODOR...
 
 	_HODOR func _
 	HODOR...
-		_hodor_ set1 :)
+		_hodor set1_ :)
 	HODOR!
 
-	_hodor_ func :)
+	_hodor func_ :)
 HODOR!

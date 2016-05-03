@@ -36,5 +36,5 @@ object HodorTest {
         runTest("shadowing", 5)
         runTest("string", "This is a string")
         runTest("while", 5)
-    }
+	runTest("factorial", 5040)    }
 }
