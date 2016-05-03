@@ -50,7 +50,7 @@ object HodorParser extends RegexParsers {
 
     def statementSeq = statement*
 
-    def statement: Parser[HodorStatement] = (funcDecl | (expr <~ ":)") | varDecl | varAssign | ifElseState | ifState | whileLoop | printState | block) ^^ {
+    def statement: Parser[HodorStatement] = (funcDecl | (expr <~ ":)") | varDecl | varAssign | ifElseState | ifState | whileLoop | printState | block) | comment ~> (funcDecl | (expr <~ ":)") | varDecl | varAssign | ifElseState | ifState | whileLoop | printState | block) ^^ {
         case s => s
     }
 
@@ -70,7 +70,7 @@ object HodorParser extends RegexParsers {
         case e => e
     }
 
-    def comment = "***HODOR" ~ """([^"]*)""".r ~ "HODOR***"
+    def comment = "<hodor>.*<hodor>".r
 
     def stringVal: Parser[HodorExpr] = "\"" ~> """([^"]*)""".r <~ "\"" ^^ {
         case s => HodorStr(s)
