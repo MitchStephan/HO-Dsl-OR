@@ -120,10 +120,13 @@ object Hodor {
                                          "; number given: " +
                                          funcCall.params.size + ")")
 		}
-	  for (i <- 0 until params.size) {
-        var param = evaluateExpression(funcCall.params(i))
+      	var expressions: Array[HodorVar] = Array[HodorVar]()
+      	for (i <- 0 until params.size) {
+        	expressions = expressions :+ evaluateExpression(funcCall.params(i))
+      	}
+	  	for (i <- 0 until params.size) {
 			scope.defineVar(params(i))
-		    scope.setVar(params(i), param)
+		    scope.setVar(params(i), expressions(i))
 		}
 		scope.returnVal = evaluateStatementSeq(block.statementSequence)
 		localScope = scope.parent
@@ -227,10 +230,10 @@ object Hodor {
 
 	def evaluateAdd(input: HodorAdd): HodorInt = {
 		var a = 0
-		for (v <- input.operands){
+		for (v <- input.operands) {
 			val v2 = evaluateExpression(v)
 			v2 match {
-				case c: HodorInt => { a += c.value }
+				case i: HodorInt => { a += i.value }
 				case _ => throw new HodorException("Hodor? (In evaluating HoDoR, operands must be of type HodorInt)")
 			}
 		}
@@ -240,10 +243,10 @@ object Hodor {
 	def evaluateSubtract(input: HodorSubtract): HodorInt = {
 		//a very lazy solution for a fencepost problem
 		var aa = evaluateExpression(input.operands(0))
-	  var a  = 0
+	  	var a  = 0
 		aa match {
 			case c: HodorInt => { a = 2*c.value }
-		  case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
+		  	case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
 		}
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
