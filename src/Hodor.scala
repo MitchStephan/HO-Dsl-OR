@@ -36,8 +36,8 @@ object Hodor {
 			if (vars.contains(name)) {
 				var v = vars.get(name)
 				v match {
-					case Some(c) => c
-					case _ => throw new HodorException("Hodor? (variable " + name + " is not defined)")
+				  case Some(c) => c
+				  case _ => throw new HodorException("Hodor? (variable " + name + " is not defined)")
 				}
 			} else {
 				parent match {
@@ -120,9 +120,10 @@ object Hodor {
                                          "; number given: " +
                                          funcCall.params.size + ")")
 		}
-		for (i <- 0 until params.size) {
+	  for (i <- 0 until params.size) {
+        var param = evaluateExpression(funcCall.params(i))
 			scope.defineVar(params(i))
-			scope.setVar(params(i), evaluateExpression(funcCall.params(i)))
+		    scope.setVar(params(i), param)
 		}
 		scope.returnVal = evaluateStatementSeq(block.statementSequence)
 		localScope = scope.parent
@@ -239,10 +240,10 @@ object Hodor {
 	def evaluateSubtract(input: HodorSubtract): HodorInt = {
 		//a very lazy solution for a fencepost problem
 		var aa = evaluateExpression(input.operands(0))
-		var a  = 0
+	  var a  = 0
 		aa match {
 			case c: HodorInt => { a = 2*c.value }
-			case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
+		  case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
 		}
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
@@ -363,7 +364,6 @@ object Hodor {
             val lines = try source.mkString finally source.close()
             println(lines)
             val parseResult: HodorParser.ParseResult[HodorProgram] = HodorParser.parse(parseProgram, lines);
-            println(parseResult)
             val hodorProgram: HodorProgram = parseResult.get
             println(hodorProgram)
             println("return: " + evaluateProgram(hodorProgram))
