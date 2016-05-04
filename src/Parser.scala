@@ -76,8 +76,8 @@ object HodorParser extends RegexParsers {
         case s => HodorStr(s)
     }
 
-    def number: Parser[HodorExpr] = """[-]*[0-9]+""".r ^^ {
-        case n => HodorNumber(n.toInt)
+    def number: Parser[HodorExpr] = """[-]?[0-9]*\.?[0-9]*""".r ^^ {
+        case n => HodorNumber(n.toFloat)
     }
 
     def add: Parser[HodorExpr] = (("(" ~> ("HoDoR" ~> expr) ~ (expr+) <~ ")") | (("HoDoR" ~> expr) ~ (expr+))) ^^ {
