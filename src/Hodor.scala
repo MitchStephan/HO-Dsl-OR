@@ -222,7 +222,7 @@ object Hodor {
 	}
 
 	def evaluateLoop(expr: HodorExpr, thn: HodorCodeBlock): HodorVar = {
-		while(isExpressionTrue(expr)){
+		while(isExpressionTrue(expr)) {
 			evaluateCodeBlock(thn)
 		}
 		HodorNone()
