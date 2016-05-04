@@ -16,7 +16,7 @@ case class HodorCodeBlock(statementSequence: List[HodorStatement]) extends Hodor
 abstract class HodorExpr extends HodorStatement
 case class HodorFuncCall(name: String, params: List[HodorExpr]) extends HodorExpr
 case class HodorVarExpr(name: String) extends HodorExpr
-case class HodorNumber(n: Int) extends HodorExpr
+case class HodorNumber(n: Float) extends HodorExpr
 case class HodorAdd(operands: List[HodorExpr]) extends HodorExpr
 case class HodorSubtract(operands: List[HodorExpr]) extends HodorExpr
 case class HodorMultiply(operands: List[HodorExpr]) extends HodorExpr
@@ -76,7 +76,7 @@ object HodorParser extends RegexParsers {
         case s => HodorStr(s)
     }
 
-    def number: Parser[HodorExpr] = """[-]?[0-9]*\.?[0-9]*""".r ^^ {
+    def number: Parser[HodorExpr] = """[-]?[0-9]+[\.]?[0-9]*""".r ^^ {
         case n => HodorNumber(n.toFloat)
     }
 

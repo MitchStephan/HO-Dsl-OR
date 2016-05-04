@@ -68,7 +68,7 @@ object Hodor {
 	}
 
 	abstract sealed class HodorVar
-    case class HodorInt(value: Int) extends HodorVar
+    case class HodorDouble(value: Double) extends HodorVar
 	case class HodorBoolean(value: Boolean) extends HodorVar
 	case class HodorString(value: String) extends HodorVar
 	case class HodorNone() extends HodorVar
@@ -80,7 +80,7 @@ object Hodor {
 
 	def evaluateProgram(program: HodorProgram): Any = {
 		evaluateCodeBlock(program.codeBlock) match {
-			case i: HodorInt => i.value
+			case f: HodorDouble => f.value
 			case s: HodorString => s.value
 			case b: HodorBoolean => b.value
 			case n: HodorNone => None
@@ -171,7 +171,7 @@ object Hodor {
 		//print(expr)
 		expr match {
 			case e: HodorStr => HodorString(e.str)
-			case e: HodorNumber => HodorInt(e.n)
+			case e: HodorNumber => HodorDouble(e.n)
 			case e: HodorTrue => HodorBoolean(true)
 			case e: HodorNot => evaluateNot(e)
 			case e: HodorAnd => evaluateAnd(e)
@@ -228,71 +228,71 @@ object Hodor {
 		HodorNone()
 	}
 
-	def evaluateAdd(input: HodorAdd): HodorInt = {
-		var a = 0
+	def evaluateAdd(input: HodorAdd): HodorDouble = {
+		var a = 0.0
 		for (v <- input.operands) {
 			val v2 = evaluateExpression(v)
 			v2 match {
-				case i: HodorInt => { a += i.value }
-				case _ => throw new HodorException("Hodor? (In evaluating HoDoR, operands must be of type HodorInt)")
+				case i: HodorDouble => { a += i.value }
+				case _ => throw new HodorException("Hodor? (In evaluating HoDoR, operands must be of type HodorDouble)")
 			}
 		}
-		HodorInt(a)
+		HodorDouble(a)
 	}
 
-	def evaluateSubtract(input: HodorSubtract): HodorInt = {
+	def evaluateSubtract(input: HodorSubtract): HodorDouble = {
 		//a very lazy solution for a fencepost problem
 		var aa = evaluateExpression(input.operands(0))
-	  	var a  = 0
+	  	var a  = 0.0
 		aa match {
-			case c: HodorInt => { a = 2*c.value }
-		  	case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
+			case c: HodorDouble => { a = 2*c.value }
+		  	case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorDouble)")
 		}
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
 			v2 match {
-				case c: HodorInt => { a -= c.value }
-				case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorInt)")
+				case c: HodorDouble => { a -= c.value }
+				case _ => throw new HodorException("Hodor? (In evaluating hOdOr, operands must be of type HodorDouble)")
 			}
 		}
-		HodorInt(a)
+		HodorDouble(a)
 	}
 
-	def evaluateMultiply(input: HodorMultiply): HodorInt = {
-		var a = 1
+	def evaluateMultiply(input: HodorMultiply): HodorDouble = {
+		var a = 1.0
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
 			v2 match {
-				case c: HodorInt => { a *= c.value }
-				case _ => throw new HodorException("Hodor? (In evaluating HODor, operands must be of type HodorInt)")
+				case c: HodorDouble => { a *= c.value }
+				case _ => throw new HodorException("Hodor? (In evaluating HODor, operands must be of type HodorDouble)")
 			}
 		}
-		HodorInt(a)
+		HodorDouble(a)
 	}
 
-	def evaluateDivide(input: HodorDivide): HodorInt = {
+	def evaluateDivide(input: HodorDivide): HodorDouble = {
 		//a very lazy solution for a fencepost problem
 		var aa = evaluateExpression(input.operands(0))
-		var a = 0
+		var a = 0.0
 		aa match {
-			case c: HodorInt => { a = c.value*c.value }
-			case _ => throw new HodorException("Hodor? (In evaluating hoDOR, operands must be of type HodorInt)")
+			case c: HodorDouble => { a = c.value*c.value }
+			case _ => throw new HodorException("Hodor? (In evaluating hoDOR, operands must be of type HodorDouble)")
 		}
 		for (v <- input.operands){
 			val v2 = evaluateExpression(v)
 			v2 match {
-				case c: HodorInt => { a /= c.value }
-				case _ => throw new HodorException("Hodor? (In evaluating hoDOR, operands must be of type HodorInt)")
+				case c: HodorDouble => { a /= c.value }
+				case _ => throw new HodorException("Hodor? (In evaluating hoDOR, operands must be of type HodorDouble)")
 			}
 		}
-		HodorInt(a)
+		HodorDouble(a)
 	}
 
 	def evaluatePrint(print: HodorPrint): HodorNone = {
 		//println(print)
 		var input = evaluateExpression(print.expr)
 		input match {
-			case i: HodorInt => println(i.value)
+			case i: HodorDouble => println(i.value)
 			case i: HodorBoolean => println(i.value)
 			case i: HodorString => println(i.value)
 			case i: HodorNone => throw new HodorException("Hodor? (Cannat print an uninitialized variable)")
@@ -336,8 +336,8 @@ object Hodor {
 		var left = evaluateExpression(gt.left)
 		var right = evaluateExpression(gt.right)
 		(left, right) match {
-			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value > r.value)
-			case _ => throw new HodorException("Hodor? (In evaluating HODORhodor, can only compare expressions of type HodorInt)")
+			case (l: HodorDouble, r: HodorDouble) => HodorBoolean(l.value > r.value)
+			case _ => throw new HodorException("Hodor? (In evaluating HODORhodor, can only compare expressions of type HodorDouble)")
 		}
 	}
 
@@ -345,8 +345,8 @@ object Hodor {
 		var left = evaluateExpression(lt.left)
 		var right = evaluateExpression(lt.right)
 		(left, right) match {
-			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value < r.value)
-			case _ => throw new HodorException("Hodor? (In evaluating hodorHODOR, can only compare expressions of type HodorInt)")
+			case (l: HodorDouble, r: HodorDouble) => HodorBoolean(l.value < r.value)
+			case _ => throw new HodorException("Hodor? (In evaluating hodorHODOR, can only compare expressions of type HodorDouble)")
 		}
 	}
 
@@ -354,7 +354,7 @@ object Hodor {
 		var left = evaluateExpression(eq.left)
 		var right = evaluateExpression(eq.right)
 		(left, right) match {
-			case (l: HodorInt, r: HodorInt) => HodorBoolean(l.value == r.value)
+			case (l: HodorDouble, r: HodorDouble) => HodorBoolean(l.value == r.value)
 			case (l: HodorBoolean, r: HodorBoolean) => HodorBoolean(l.value == r.value)
 			case (l: HodorString, r: HodorString) => HodorBoolean(l.value == r.value)
 			case (_, _) => throw new HodorException("Hodor? (In evaluating hodor^hodor, operands must be of the same type, given)")
