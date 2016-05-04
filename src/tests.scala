@@ -40,5 +40,9 @@ object HodorTest {
       	runTest("string", "This is a string")
       	runTest("subtract", 2)
         runTest("while", 5)
+	runTest("negative", 1)
+	runTest("negativeAdd", -2)
+	runTest("negativeSub", -3)
+	runTest("negativeDiv", 3)
     }
 }
