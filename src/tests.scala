@@ -2,7 +2,6 @@ import Hodor._
 import HodorParser._
 
 object HodorTest {
-
     def runTest(sampleFile: String, expectedResult: Any) {
         val source = scala.io.Source.fromFile("../samples/" + sampleFile + ".hodor")
         val lines = try source.mkString finally source.close()
